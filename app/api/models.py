@@ -3,37 +3,35 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, username, email, password=None):
+    def create_user(self, email, username, password, **extra_fields):
         """Create and return a `User` with an email, username and password."""
-
-        user = self.model(username=username, email=self.normalize_email(email))
+        user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
-        user.save()
-
+        user.username=username
+        user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, password):
+    def create_superuser(self, email, username, password, **extra_fields):
         """
         Create and return a `User` with superuser powers.
         Superuser powers means that this use is an admin that can do anything
         they want.
         """
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
         if password is None:
             raise TypeError('Superusers must have a password.')
-
-        user = self.create_user(username, email, password)
-        user.is_superuser = True
-        user.is_staff = True
-        user.save()
-
+        user = self.create_user(email, username, password, **extra_fields)
         return user
 
 class User(AbstractUser):
+    username = models.CharField(max_length=255, unique=True, blank=False)
     email=models.EmailField(max_length=255, unique=True,  blank=False)
     gender =models.CharField(max_length=255, blank=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['username']
     objects = UserManager()
 
     def __str__(self):
