@@ -1,8 +1,10 @@
 from rest_framework import serializers
 from api.models import User
+from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, min_length=8, write_only=True)
+    token = serializers.ReadOnlyField()
     class Meta:
         model=User
         fields=[
@@ -18,8 +20,27 @@ class UserSerializer(serializers.ModelSerializer):
             "date_joined",
             "last_login",
             "gender",
+            "token"
         ]
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
-        return user     
+        return user
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.CharField(max_length=255)
+    password = serializers.CharField(max_length=128, write_only=True)
+    token = serializers.ReadOnlyField()
+
+    def validate(self, data):
+        email=data.get("email")
+        password=data.get("password")
+        user=authenticate(username=email, password=password)
+        if user is None:
+            raise serializers.ValidationError("email or Password is incorrect")
+        return{
+            "email":user.email,
+            "username":user.username,
+            "token":user.token
+    }    
+
 

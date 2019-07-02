@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+import jwt
+from datetime import datetime, timedelta
+from app import settings
 
 class UserManager(BaseUserManager):
 
@@ -41,4 +44,28 @@ class User(AbstractUser):
         """
         return self.email
 
-# Create your models here.
+    def token(self):
+        credentials={
+            "id":self.id,
+            "username":self.username,
+            "is_staff":self.is_staff,
+            "is_active":self.is_active,
+            "is_superuser":self.is_superuser,
+            "email":self.email,
+            "exp":datetime.now()+timedelta(days=1)
+        }
+        return jwt.encode(credentials,settings.SECRET_KEY).decode("utf-8")
+
+class Clients(models.Model):
+    client_name = models.CharField(max_length=255, unique=True, blank=False)
+    email = models.EmailField(max_length=255, unique=True,  blank=False)
+    occupation = models.CharField(max_length=255, blank=False)
+    contact = models.IntegerField(default=0)
+    address = models.CharField(max_length=255, blank=False)
+    gender = models.CharField(max_length=255, blank=False)
+    image = models.URLField(blank=True)
+    added_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.client_name
