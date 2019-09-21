@@ -1,7 +1,11 @@
+# from rest_framework import serializers
+from api.models import Clients, Account
+from api.serializers import BaseSerializer
+from .serializer_main import AccountSerializer
 from rest_framework import serializers
-from api.models import Clients
 
-class ClientSerializer(serializers.ModelSerializer):
+class ClientSerializer(BaseSerializer):
+    account=serializers.SerializerMethodField()
 
     class Meta:
         model = Clients
@@ -14,11 +18,11 @@ class ClientSerializer(serializers.ModelSerializer):
             "gender",
             "contact",
             "added_by",
-            "image"
+            "image",
+            "account",
         )
-    def to_internal_value(self, data):
-        user=self.context["request"].user
-        data["added_by"]=user.id
-        data = super().to_internal_value(data)
-        return data
-
+    def get_account(self,obj):
+        account=Account.objects.filter(client=obj.id)
+        info=AccountSerializer(account, many=True)
+        return info.data
+            

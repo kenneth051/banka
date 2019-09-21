@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 import jwt
 from datetime import datetime, timedelta
 from app import settings
+from api.requestMiddleware import RequestMiddleware
+from api.constants import ACTIONS, TIME
 
 class UserManager(BaseUserManager):
 
@@ -27,6 +29,7 @@ class UserManager(BaseUserManager):
             raise TypeError('Superusers must have a password.')
         user = self.create_user(email, username, password, **extra_fields)
         return user
+
 
 class User(AbstractUser):
     username = models.CharField(max_length=255, unique=True, blank=False)
@@ -56,7 +59,21 @@ class User(AbstractUser):
         }
         return jwt.encode(credentials,settings.SECRET_KEY).decode("utf-8")
 
-class Clients(models.Model):
+class BaseModel(models.Model):
+    created_on = models.DateTimeField(auto_now=True)
+    added_by = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        abstract=True
+
+    def save(self, *args, **kwargs):
+        import pdb;
+        pdb.set_trace()
+        request=RequestMiddleware.get_request()
+        self.added_by = request.user
+        super().save(*args, **kwargs)
+
+class Clients(BaseModel):
     client_name = models.CharField(max_length=255, unique=True, blank=False)
     email = models.EmailField(max_length=255, unique=True,  blank=False)
     occupation = models.CharField(max_length=255, blank=False)
@@ -64,8 +81,32 @@ class Clients(models.Model):
     address = models.CharField(max_length=255, blank=False)
     gender = models.CharField(max_length=255, blank=False)
     image = models.URLField(blank=True)
-    added_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    added_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.client_name
+class Account(BaseModel):
+    client=models.OneToOneField("Clients", on_delete=models.CASCADE)
+    balance=models.DecimalField(max_digits=15, decimal_places=2)
+
+    def __str__(self):
+        return self.client.client_name
+
+class Loans(BaseModel):
+    client_account=models.ForeignKey(Account, on_delete=models.CASCADE)
+    amount=models.DecimalField(max_digits=15, decimal_places=2)
+    interest=models.DecimalField(max_digits=15, decimal_places=2)
+    time_category=models.CharField(
+        max_length=10, null=False, blank=False, choices=TIME, editable=False
+    )
+    time=models.DecimalField(max_digits=15, decimal_places=2)
+
+class Transactions(BaseModel):
+    client_account=models.ForeignKey(Account, null=True, on_delete=models.CASCADE)
+    loan=models.ForeignKey(Loans, null=True, on_delete=models.CASCADE)
+    action=models.CharField(
+        max_length=10, null=False, blank=False, choices=ACTIONS, editable=False
+    )
+    amount=models.DecimalField(max_digits=15, null=False, blank=False, decimal_places=2)
+
+    def __str__(self):
+        return self.amount

@@ -38,20 +38,5 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'users',
                 'abstract': False,
             },
-        ),
-        migrations.CreateModel(
-            name='Clients',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('client_name', models.CharField(max_length=255, unique=True)),
-                ('email', models.EmailField(max_length=255, unique=True)),
-                ('occupation', models.CharField(max_length=255)),
-                ('contact', models.IntegerField(default=0)),
-                ('address', models.CharField(max_length=255)),
-                ('gender', models.CharField(max_length=255)),
-                ('image', models.URLField(blank=True)),
-                ('added_at', models.DateTimeField(auto_now=True)),
-                ('added_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-            ],
-        ),
+        )
     ]
