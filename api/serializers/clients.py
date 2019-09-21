@@ -4,15 +4,16 @@ from api.serializers import BaseSerializer
 from .serializer_main import AccountSerializer
 from rest_framework import serializers
 
+
 class ClientSerializer(BaseSerializer):
-    account=serializers.SerializerMethodField()
+    account = serializers.SerializerMethodField()
 
     class Meta:
         model = Clients
         fields = (
             "id",
             "client_name",
-            "email" ,
+            "email",
             "occupation",
             "address",
             "gender",
@@ -21,8 +22,8 @@ class ClientSerializer(BaseSerializer):
             "image",
             "account",
         )
-    def get_account(self,obj):
-        account=Account.objects.filter(client=obj.id)
-        info=AccountSerializer(account, many=True)
+
+    def get_account(self, obj):
+        account = Account.objects.filter(client=obj.id)
+        info = AccountSerializer(account, many=True)
         return info.data
-            
