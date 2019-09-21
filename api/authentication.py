@@ -3,18 +3,18 @@ from api.models import User
 import jwt
 from app.settings import SECRET_KEY
 
+
 class Authentication(authentication.BaseAuthentication):
     def authenticate(self, request):
-        token= request.headers.get("Authorization")
+        token = request.headers.get("Authorization")
         if not token:
             return None
         try:
-            payload=self.decode_token(token)
+            payload = self.decode_token(token)
             user = User.objects.get(email=payload['email'])
-            return(user, payload)
+            return (user, payload)
         except Exception:
             raise exceptions.AuthenticationFailed("User doesnt exist")
-
 
     def decode_token(self, token):
         try:
@@ -22,7 +22,4 @@ class Authentication(authentication.BaseAuthentication):
         except Exception:
             raise exceptions.AuthenticationFailed('The token is invalid')
 
-        return payload        
-
-
-
+        return payload

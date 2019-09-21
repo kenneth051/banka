@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='account',
             name='client',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='api.Clients'),
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE, to='api.Clients'),
         ),
     ]
